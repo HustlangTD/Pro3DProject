@@ -11,6 +11,13 @@ labels:
 - duanes
 - mind
 - shoot
+AssetOrigin:
+  serializedVersion: 1
+  productId: 8405
+  packageName: Attack Helicopter II + Animations
+  packageVersion: 1.1
+  assetPath: Assets/Attack Helicopter2/Mi24.fbx
+  uploadId: 29197
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable:
@@ -75,7 +82,7 @@ ModelImporter:
       orientationOffsetY: 0
       level: 0
       cycleOffset: 0
-      loop: 0
+      loop: 1
       hasAdditiveReferencePose: 0
       loopTime: 0
       loopBlend: 0
@@ -127,13 +134,13 @@ ModelImporter:
       name: Rotation+NO Wheels
       takeName: 
       internalID: 0
-      firstFrame: 31
-      lastFrame: 61
-      wrapMode: 0
+      firstFrame: 29
+      lastFrame: 154
+      wrapMode: 2
       orientationOffsetY: 0
       level: 0
       cycleOffset: 0
-      loop: 0
+      loop: 1
       hasAdditiveReferencePose: 0
       loopTime: 0
       loopBlend: 0
@@ -314,10 +321,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 8405
-  packageName: Attack Helicopter II + Animations
-  packageVersion: 1.1
-  assetPath: Assets/Attack Helicopter2/Mi24.fbx
-  uploadId: 29197
