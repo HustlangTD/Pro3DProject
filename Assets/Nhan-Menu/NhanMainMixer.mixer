@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!241 &24100000
+AudioMixerController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: NhanMainMixer
+  m_OutputGroup: {fileID: 0}
+  m_MasterGroup: {fileID: 24300002}
+  m_Snapshots:
+  - {fileID: 24500006}
+  m_StartSnapshot: {fileID: 24500006}
+  m_SuspendThreshold: -80
+  m_EnableSuspend: 1
+  m_UpdateMode: 0
+  m_ExposedParameters:
+  - guid: 32ccf8130c84cfe46afba1fbc8ea93d1
+    name: NhanMasterVolume
+  m_AudioMixerGroupViews:
+  - guids:
+    - 48edf236342652e4aa5c78d3d31a9771
+    - d9217fda1f10866448829518ca36ef43
+    name: View
+  m_CurrentViewIndex: 0
+  m_TargetSnapshot: {fileID: 24500006}
+--- !u!243 &24300002
+AudioMixerGroupController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Master
+  m_AudioMixer: {fileID: 24100000}
+  m_GroupID: 48edf236342652e4aa5c78d3d31a9771
+  m_Children:
+  - {fileID: 6013466450995593661}
+  m_Volume: f8a9a43f39e00bf4b8dcbe7b9d081b9e
+  m_Pitch: 89fa290ace909a74a931bdce96caaefb
+  m_Send: 00000000000000000000000000000000
+  m_Effects:
+  - {fileID: 24400004}
+  m_UserColorIndex: 0
+  m_Mute: 0
+  m_Solo: 0
+  m_BypassEffects: 0
+--- !u!244 &24400004
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: a3d44df630a5b5d41b49045abdd59aec
+  m_EffectName: Attenuation
+  m_MixLevel: 070340581bb8de74094fdd31e7d34403
+  m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!245 &24500006
+AudioMixerSnapshotController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Snapshot
+  m_AudioMixer: {fileID: 24100000}
+  m_SnapshotID: e3da11b33e0bb1f448b743fc0c382326
+  m_FloatValues: {}
+  m_TransitionOverrides: {}
+--- !u!244 &4200198336109973825
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: 38fa6a5b32877cd49b07578590f42ad0
+  m_EffectName: Attenuation
+  m_MixLevel: ff0bfdf6d577a6648a4c47adb27b2280
+  m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!243 &6013466450995593661
+AudioMixerGroupController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: NhanMaster
+  m_AudioMixer: {fileID: 24100000}
+  m_GroupID: d9217fda1f10866448829518ca36ef43
+  m_Children: []
+  m_Volume: 32ccf8130c84cfe46afba1fbc8ea93d1
+  m_Pitch: a38084e871642ea4e955cdeee0480a88
+  m_Send: 00000000000000000000000000000000
+  m_Effects:
+  - {fileID: 4200198336109973825}
+  m_UserColorIndex: 0
+  m_Mute: 0
+  m_Solo: 0
+  m_BypassEffects: 0
