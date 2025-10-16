@@ -14,6 +14,8 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 velocity;
     private bool isGrounded;
 
+    public bool cutscenePlaying = true;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -25,6 +27,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        // if (cutscenePlaying) return;
         // Kiểm tra có đứng trên đất không
         isGrounded = controller.isGrounded;
         if (isGrounded && velocity.y < 0)
