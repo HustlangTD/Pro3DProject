@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Unity.Mathematics;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -15,14 +18,22 @@ public class EnemyAI : MonoBehaviour
     public float runAwayHealthThreshold = 25f;
     public bool isDead = false;
     private NavMeshAgent _agent;
+    public float rotationSpeed = 5f;
 
     public float patrolSpeed = 2f;
     public float minDistanceToWaypoint = 1f;
     public List<Transform> patrolPoints;
     private int currentWaypointIndex = 0;
-    
-    private Animator anim; 
+    public GameObject projectilePrefab;
+
+    public Transform projectileSpawnPoint;
+    public AudioClip meleeAttackSFX;
+    private AudioSource audioSource;
+    public ParticleSystem meleeAttackVFX;
+
+    private Animator anim;
     private BehaviorTree behaviorTree;
+
 
     // Tên các tham số Animator
     private const string IS_WALKING = "IsWalking";
@@ -34,6 +45,13 @@ public class EnemyAI : MonoBehaviour
 
     void Start()
     {
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            Debug.LogError("ENEMY: Không tìm thấy AudioSource component!");
+        }
         // Lấy Component Animator
         anim = GetComponent<Animator>();
         if (anim == null)
@@ -53,7 +71,7 @@ public class EnemyAI : MonoBehaviour
             Debug.LogError("ENEMY: Không tìm thấy NavMeshAgent component!");
         }
 
-        if(_agent != null && !_agent.isOnNavMesh)
+        if (_agent != null && !_agent.isOnNavMesh)
         {
             Debug.LogError("ENEMY: NavMeshAgent không được đặt trên NavMesh!");
             if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 5f, NavMesh.AllAreas))
@@ -66,23 +84,32 @@ public class EnemyAI : MonoBehaviour
                 Debug.LogError("ENEMY: Không thể tìm thấy vị trí hợp lệ trên NavMesh gần vị trí hiện tại.");
             }
         }
-        
+
 
         //Xây dựng Cây Hành vi
         Node root = SetupBehaviorTree();
         behaviorTree = new BehaviorTree(root);
     }
 
+
     void Update()
     {
         if (!isDead)
         {
-            
+
             behaviorTree.Update();
         }
     }
+    private void FacePlayer()
+    {
+        if(playerTransform == null) return;
+        Vector3 direction = (playerTransform.position - transform.position).normalized;
+        direction.y = 0; // Giữ nguyên trục Y để tránh nghiêng
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+    }
 
-    
+
     private Node SetupBehaviorTree()
     {
         // 1. Nhánh Chết 
@@ -97,14 +124,14 @@ public class EnemyAI : MonoBehaviour
 
         // 1c. Nhánh Chiến đấu 
         ConditionNode isPlayerInSight = new ConditionNode(IsPlayerInSight);
-            ConditionNode isPlayerClose = new ConditionNode(IsPlayerClose);
-            ActionNode MeleeAttackAction = new ActionNode(MeleeAttack);
-            SequenceNode meleeSequence = new SequenceNode(new List<Node> { isPlayerClose, MeleeAttackAction });
+        ConditionNode isPlayerClose = new ConditionNode(IsPlayerClose);
+        ActionNode MeleeAttackAction = new ActionNode(MeleeAttack);
+        SequenceNode meleeSequence = new SequenceNode(new List<Node> { isPlayerClose, MeleeAttackAction });
 
-            ActionNode RangedAttackAction = new ActionNode(RangedAttack);
-            
-            SelectorNode attackSelector = new SelectorNode(new List<Node> { meleeSequence, RangedAttackAction });
-            SequenceNode fightSequence = new SequenceNode(new List<Node> { isPlayerInSight, attackSelector });
+        ActionNode RangedAttackAction = new ActionNode(RangedAttack);
+
+        SelectorNode attackSelector = new SelectorNode(new List<Node> { meleeSequence, RangedAttackAction });
+        SequenceNode fightSequence = new SequenceNode(new List<Node> { isPlayerInSight, attackSelector });
 
         // 2. Nhánh Mặc định (Tuần tra)
         ActionNode PatrolAction = new ActionNode(Patrol);
@@ -147,26 +174,26 @@ public class EnemyAI : MonoBehaviour
         {
             isDead = true;
             Debug.Log("ENEMY: 💀 CHẾT. Kích hoạt hoạt ảnh chết.");
-            
+
             // Tắt tất cả các tham số di chuyển
             anim.SetBool(IS_WALKING, false);
             anim.SetBool(IS_RUNNING, false);
-            anim.SetTrigger(TRIGGER_DIE); 
-            
-            
+            anim.SetTrigger(TRIGGER_DIE);
+
+
         }
-        return NodeState.SUCCESS; 
+        return NodeState.SUCCESS;
     }
 
     private NodeState RunAway()
     {
         Debug.Log("ENEMY: 🏃 Máu thấp! Chạy trốn khỏi Player.");
         if (_agent == null) return NodeState.FAILURE;
-        
+
         // Cài đặt hoạt ảnh chạy
         anim.SetBool(IS_WALKING, false);
-        anim.SetBool(IS_RUNNING, true); 
-        
+        anim.SetBool(IS_RUNNING, true);
+
         // Thêm logic di chuyển để chạy xa player
         if (_agent.remainingDistance <= minDistanceToWaypoint || !_agent.hasPath)
         {
@@ -183,41 +210,96 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        return NodeState.RUNNING; 
+        return NodeState.RUNNING;
     }
 
     private NodeState MeleeAttack()
     {
         Debug.Log("ENEMY: ⚔️ Player ở gần. Tấn công cận chiến!");
-        
+        FacePlayer();
+
         // Tắt di chuyển khi tấn công
         anim.SetBool(IS_WALKING, false);
         anim.SetBool(IS_RUNNING, false);
-        
+
         // Kích hoạt hoạt ảnh tấn công cận chiến 
-        anim.SetTrigger(TRIGGER_MELEE); 
+        anim.SetTrigger(TRIGGER_MELEE);
         return NodeState.SUCCESS;
     }
 
     private NodeState RangedAttack()
     {
         Debug.Log("ENEMY: 🔫 Player ở xa. Bắn!");
-        
-        
+        _agent.isStopped = true; // Dừng di chuyển khi tấn công
+        FacePlayer();
+
+
         anim.SetBool(IS_WALKING, false);
         anim.SetBool(IS_RUNNING, false);
-        
-        
+
+
         anim.SetTrigger(TRIGGER_RANGED);
-        
+
         return NodeState.SUCCESS;
     }
 
+    public void ShootProjectile()
+    {
+        if (projectilePrefab == null || projectileSpawnPoint == null)
+        {
+            Debug.LogError("ENEMY: projectilePrefab hoặc projectileSpawnPoint chưa được gán!");
+            return;
+        }
+        GameObject projectile = Instantiate(projectilePrefab, projectileSpawnPoint.position, projectileSpawnPoint.rotation);
+        float projectileSpeed = 20f; // Tốc độ viên đạn
+        Rigidbody rb = projectile.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.linearVelocity = projectileSpawnPoint.forward * projectileSpeed;
+        }
+        else
+        {
+            ProjectileMover mover = projectile.GetComponent<ProjectileMover>();
+            if (mover != null)
+            {
+                mover.SetDirection(projectileSpawnPoint.forward);
+            }
+            else
+            {
+                Debug.LogError("ENEMY: Không tìm thấy Rigidbody hoặc ProjectileMover trên projectilePrefab!");
+            }
+        }
+
+    }
+
+   // public void PlayMeleeSFX()
+   // {
+     //   if (meleeAttackSFX != null && audioSource != null)
+    //    {
+    //        audioSource.PlayOneShot(meleeAttackSFX);
+      //  }
+      //  else
+      //  {
+           // Debug.LogError("ENEMY: meleeAttackSFX hoặc audioSource chưa được gán!");
+       // }
+   // }
+
+    public void PlayMeleeVFX()
+    {
+        if (meleeAttackVFX != null)
+        {
+            meleeAttackVFX.Play();
+        }
+        else
+        {
+            Debug.LogError("ENEMY: meleeAttackVFX chưa được gán!");
+        }
+    }
     private NodeState Patrol()
     {
         Debug.Log("ENEMY: 🚶 Tuần tra trong khu vực.");
         _agent.speed = patrolSpeed;
-        
+
         anim.SetBool(IS_RUNNING, false);
         anim.SetBool(IS_WALKING, true);
 
@@ -234,5 +316,19 @@ public class EnemyAI : MonoBehaviour
         }
 
         return NodeState.RUNNING;
+    }
+}
+
+
+internal class ProjectileMover
+{
+    internal void SetDirection(Vector3 direction)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal void SetDirection(object direction)
+    {
+        throw new NotImplementedException();
     }
 }
