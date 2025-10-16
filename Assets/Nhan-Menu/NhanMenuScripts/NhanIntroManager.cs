@@ -3,21 +3,18 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 
 public class NhanIntroManager : MonoBehaviour
 {
     [Header("UI Panels")]
-    public GameObject panelMenu;
     public GameObject panelIntro;
     public GameObject panelGuide;
     public GameObject panelSetting;
 
     [Header("UI Buttons")]
-    public Button startButton;
     public Button skipButton;
-    public Button settingButton;
-    public Button backButton;     // 🆕 Nút Back trong Setting Panel
-    public Button quitButton;
+    public Button backButton;
     public Slider volumeSlider;
 
     [Header("Subtitle")]
@@ -36,6 +33,8 @@ public class NhanIntroManager : MonoBehaviour
     public AudioClip introClip;
 
     private bool isIntroPlaying = false;
+    private bool guideDone = false;
+    private float defaultVolume = 0.5f; // ✅ Volume mặc định 50%
 
     string[] introLines = new string[]
     {
@@ -51,98 +50,121 @@ public class NhanIntroManager : MonoBehaviour
 
     void Start()
     {
-        // Ẩn/hiện panel mặc định
-        panelMenu?.SetActive(true);
-        panelIntro?.SetActive(false);
-        panelGuide?.SetActive(false);
-        panelSetting?.SetActive(false);
+        // ✅ Đảm bảo chỉ có 1 EventSystem trong scene
+        EventSystem[] systems = FindObjectsOfType<EventSystem>();
+        if (systems.Length > 1)
+        {
+            for (int i = 1; i < systems.Length; i++)
+                Destroy(systems[i].gameObject);
+        }
+
+        // ✅ Ẩn panel ban đầu
+        if (panelGuide) panelGuide.SetActive(false);
+        if (panelSetting) panelSetting.SetActive(false);
+
         if (player) player.SetActive(false);
 
-        // Gán sự kiện cho các nút
-        if (startButton) startButton.onClick.AddListener(StartGame);
+        // ✅ Gán sự kiện nút
         if (skipButton) skipButton.onClick.AddListener(SkipIntro);
-        if (settingButton) settingButton.onClick.AddListener(OpenSetting);
-        if (backButton) backButton.onClick.AddListener(CloseSetting); // 🆕
-        if (quitButton) quitButton.onClick.AddListener(QuitGame);
+        if (backButton) backButton.onClick.AddListener(CloseSetting);
         if (volumeSlider) volumeSlider.onValueChanged.AddListener(ChangeVolume);
 
-        if (bgMusic != null)
-            bgMusic.volume = volumeSlider ? volumeSlider.value : 1f;
+        // ✅ Thiết lập volume mặc định 50%
+        if (volumeSlider)
+            volumeSlider.value = defaultVolume;
+        if (bgMusic)
+        {
+            bgMusic.volume = defaultVolume;
+            if (!bgMusic.isPlaying) bgMusic.Play();
+        }
+        if (introVoice)
+            introVoice.volume = defaultVolume;
 
         if (mainCamera == null)
             mainCamera = Camera.main;
+
         if (boat == null)
             boat = GameObject.FindWithTag("Boat");
+
+        // ✅ Hiển thị intro ngay khi bật
+        StartCoroutine(PlayIntro());
+        StartCoroutine(SceneAutoTimeout());
     }
 
-    // 👉 Khi bấm Start
-    public void StartGame()
+    void Update()
     {
-        panelMenu.SetActive(false);
-        StartCoroutine(PlayIntro());
+        // Xoay nhẹ camera quanh thuyền khi intro
+        if (isIntroPlaying && mainCamera && boat)
+        {
+            mainCamera.transform.RotateAround(boat.transform.position, Vector3.up, 5f * Time.deltaTime);
+        }
     }
 
     IEnumerator PlayIntro()
     {
         isIntroPlaying = true;
-        panelIntro.SetActive(true);
+        if (panelIntro) panelIntro.SetActive(true);
 
-        // Phát giọng đọc AI (nếu có)
         if (introVoice && introClip)
         {
             introVoice.clip = introClip;
             introVoice.Play();
         }
 
-        // Hiển thị từng dòng intro (5 giây mỗi lần)
+        // ✅ Hiển thị phụ đề + ảnh theo từng đoạn
         for (int i = 0; i < introLines.Length; i++)
         {
-            subtitleText.text = introLines[i];
-            if (introImages != null && i < introImages.Length && introImage != null)
+            if (subtitleText) subtitleText.text = introLines[i];
+            if (introImage && introImages != null && i < introImages.Length)
                 introImage.sprite = introImages[i];
 
-            if (mainCamera && boat)
-                mainCamera.transform.RotateAround(boat.transform.position, Vector3.up, 10 * Time.deltaTime);
-
-            yield return new WaitForSeconds(5f);
+            yield return new WaitForSeconds(4f);
         }
 
-        panelIntro.SetActive(false);
+        // ✅ Hết intro → sang hướng dẫn
+        if (panelIntro) panelIntro.SetActive(false);
+        isIntroPlaying = false;
         StartCoroutine(ShowGuide());
     }
 
     IEnumerator ShowGuide()
     {
-        panelGuide.SetActive(true);
+        if (panelGuide) panelGuide.SetActive(true);
         if (player) player.SetActive(true);
 
         TextMeshProUGUI guideText = panelGuide.GetComponentInChildren<TextMeshProUGUI>();
         if (guideText != null)
         {
             guideText.text = "Di chuyển: W A S D";
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(2.5f);
             guideText.text = "Nhảy: Space";
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(2.5f);
             guideText.text = "Bắn: Chuột trái";
             yield return new WaitForSeconds(3f);
         }
 
-        panelGuide.SetActive(false);
-        isIntroPlaying = false;
+        if (panelGuide) panelGuide.SetActive(false);
+        guideDone = true;
     }
 
-    // 🟢 Mở panel Setting
-    public void OpenSetting()
+    private void OnTriggerEnter(Collider other)
     {
-        panelSetting.SetActive(true);
-        panelMenu.SetActive(false);
+        if (guideDone && other.CompareTag("Boat"))
+        {
+            OnBoatReached();
+        }
     }
 
-    // 🔴 Đóng panel Setting (Back)
-    public void CloseSetting()
+    public void OnBoatReached()
     {
-        panelSetting.SetActive(false);
-        panelMenu.SetActive(true);
+        Debug.Log("🚤 Chạm thuyền → Chuyển qua GameScene sau 2 giây");
+        StartCoroutine(LoadMainSceneAfterDelay());
+    }
+
+    IEnumerator LoadMainSceneAfterDelay()
+    {
+        yield return new WaitForSeconds(2f);
+        SceneManager.LoadScene("Scene 5");
     }
 
     public void SkipIntro()
@@ -151,9 +173,9 @@ public class NhanIntroManager : MonoBehaviour
         if (introVoice && introVoice.isPlaying)
             introVoice.Stop();
 
-        panelIntro.SetActive(false);
+        if (panelIntro) panelIntro.SetActive(false);
         StartCoroutine(ShowGuide());
-        Debug.Log("⏩ Đã bỏ qua intro");
+        Debug.Log("⏩ Bỏ qua intro");
     }
 
     public void ChangeVolume(float value)
@@ -162,9 +184,16 @@ public class NhanIntroManager : MonoBehaviour
         if (introVoice) introVoice.volume = value;
     }
 
-    public void QuitGame()
+    public void CloseSetting()
     {
-        Debug.Log("Thoát game...");
-        Application.Quit();
+        if (panelSetting) panelSetting.SetActive(false);
+    }
+
+    IEnumerator SceneAutoTimeout()
+    {
+        yield return new WaitForSeconds(180f);
+        if (!guideDone) yield break;
+        Debug.Log("🕒 Hết 180s → Tự qua scene chính");
+        StartCoroutine(LoadMainSceneAfterDelay());
     }
 }

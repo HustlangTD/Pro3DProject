@@ -1,15 +1,30 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class NhanBoatTrigger : MonoBehaviour
+public class BoatTrigger : MonoBehaviour
 {
-    public string nextScene = "MainScene";
+    // gán manager trong inspector (tốt hơn là gán)
+    public NhanIntroManager introManager;
+
+    void Reset()
+    {
+        // cố gắng tự gán manager nếu có trong scene
+        if (introManager == null)
+            introManager = FindObjectOfType<NhanIntroManager>();
+    }
 
     private void OnTriggerEnter(Collider other)
     {
+        // Assuming Player has tag "Player"
         if (other.CompareTag("Player"))
         {
-            SceneManager.LoadScene(nextScene);
+            if (introManager != null)
+            {
+                introManager.OnBoatReached();
+            }
+            else
+            {
+                Debug.LogWarning("[BoatTrigger] introManager chưa gán!");
+            }
         }
     }
 }
