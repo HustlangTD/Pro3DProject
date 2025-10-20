@@ -173,7 +173,7 @@ public class EnemyAI : MonoBehaviour
         if (!isDead)
         {
             isDead = true;
-            Debug.Log("ENEMY: 💀 CHẾT. Kích hoạt hoạt ảnh chết.");
+            // Debug.Log("ENEMY: 💀 CHẾT. Kích hoạt hoạt ảnh chết.");
 
             // Tắt tất cả các tham số di chuyển
             anim.SetBool(IS_WALKING, false);
@@ -187,7 +187,7 @@ public class EnemyAI : MonoBehaviour
 
     private NodeState RunAway()
     {
-        Debug.Log("ENEMY: 🏃 Máu thấp! Chạy trốn khỏi Player.");
+        // Debug.Log("ENEMY: 🏃 Máu thấp! Chạy trốn khỏi Player.");
         if (_agent == null) return NodeState.FAILURE;
 
         // Cài đặt hoạt ảnh chạy
@@ -215,7 +215,7 @@ public class EnemyAI : MonoBehaviour
 
     private NodeState MeleeAttack()
     {
-        Debug.Log("ENEMY: ⚔️ Player ở gần. Tấn công cận chiến!");
+        // Debug.Log("ENEMY: ⚔️ Player ở gần. Tấn công cận chiến!");
         FacePlayer();
 
         // Tắt di chuyển khi tấn công
@@ -229,7 +229,7 @@ public class EnemyAI : MonoBehaviour
 
     private NodeState RangedAttack()
     {
-        Debug.Log("ENEMY: 🔫 Player ở xa. Bắn!");
+        // Debug.Log("ENEMY: 🔫 Player ở xa. Bắn!");
         _agent.isStopped = true; // Dừng di chuyển khi tấn công
         FacePlayer();
 
@@ -297,7 +297,7 @@ public class EnemyAI : MonoBehaviour
     }
     private NodeState Patrol()
     {
-        Debug.Log("ENEMY: 🚶 Tuần tra trong khu vực.");
+        // Debug.Log("ENEMY: 🚶 Tuần tra trong khu vực.");
         _agent.speed = patrolSpeed;
 
         anim.SetBool(IS_RUNNING, false);
