@@ -11,8 +11,26 @@ public class SoundManager : MonoBehaviour
     public AudioClip M4A1Shot;
 
     public AudioSource shootingShoundM4A1;
-    
+
     public AudioSource emptyMagazineShoundPistol;
+
+    public AudioClip zombieWalking;
+    public AudioClip zombieChase;
+    public AudioClip zombieAttack;
+    public AudioClip zombieHurt;
+    public AudioClip zombieDeath;
+
+    public AudioSource zombieChannel;
+
+    public AudioSource zombieChannel2;
+
+    public AudioSource playerChannel;
+    public AudioClip playerHurt;
+    public AudioClip playerDie;
+
+    public AudioClip gameOverMusic;
+
+
 
 
 

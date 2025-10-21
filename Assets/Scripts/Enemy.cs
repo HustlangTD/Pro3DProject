@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -7,6 +8,8 @@ public class Enemy : MonoBehaviour
     private Animator animator;
 
     private NavMeshAgent navAgent;
+
+    public bool isDead;
 
     private void Start()
     {
@@ -21,36 +24,46 @@ public class Enemy : MonoBehaviour
         {
             int randomValue = Random.Range(0, 2);
 
-            if(randomValue == 0)
+            if (randomValue == 0)
             {
                 animator.SetTrigger("DIE1");
             }
-                
+
             else
             {
                 animator.SetTrigger("DIE2");
-                
+
             }
-                     
-            
+
+            isDead = true;
+
+            //Dead sound
+            SoundManager.Instance.zombieChannel2.PlayOneShot(SoundManager.Instance.zombieDeath);
+
+
         }
         else
         {
             animator.SetTrigger("DAMAGE");
+
+            //Hurt sound
+            SoundManager.Instance.zombieChannel2.PlayOneShot(SoundManager.Instance.zombieHurt);
         }
 
 
     }
     
-    private void Update()
+
+    private void OnDrawGizmos()
     {
-        if (navAgent.velocity.magnitude > 0.1f)
-        {
-            animator.SetBool("isWalking", true);
-        }
-        else
-        {
-            animator.SetBool("isWalking", false);
-        }
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, 2.5f); //attacking // stop attacking 
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, 18f); //detection (start chasing)
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, 21f); //stop chasing
     }
+    
 }
