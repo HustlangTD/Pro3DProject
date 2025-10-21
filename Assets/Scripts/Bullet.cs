@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
+    public int bulletDamage;
+
     private void OnCollisionEnter(Collision objectWeHit)
     {
         if (objectWeHit.gameObject.CompareTag("Enemy"))
@@ -15,6 +17,12 @@ public class Bullet : MonoBehaviour
         {
             print("Hit a wall");
             CreateBullerImpactEffect(objectWeHit);
+            Destroy(gameObject);
+        }
+        if (objectWeHit.gameObject.CompareTag("Enemy"))
+        {
+            objectWeHit.gameObject.GetComponent<Enemy>().TakeDamage(bulletDamage);
+
             Destroy(gameObject);
         }
     }

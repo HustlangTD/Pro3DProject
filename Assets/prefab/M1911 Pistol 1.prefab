@@ -4991,6 +4991,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba8bf8c5d4966e43a4cf33446d87aeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isActiveWeapon: 0
+  weaponDamage: 20
   isshooting: 0
   readyToShoot: 0
   shootingdelay: 0.5

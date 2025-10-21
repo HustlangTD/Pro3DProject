@@ -6,6 +6,9 @@ public class InteractionManager : MonoBehaviour
     public static InteractionManager Instance { get; set; }
 
     public Weapon hoveredWeapon = null;
+    public AmmoBox hoveredAmmoBox = null;
+
+    public Throwable hoveredThrowable = null;
 
 
     private void Awake()
@@ -34,30 +37,69 @@ public class InteractionManager : MonoBehaviour
         //  Dùng GetComponentInParent
         Weapon weaponInParent = objectHitByRaycast.GetComponentInParent<Weapon>();
 
-        if (weaponInParent != null) // Nếu tìm thấy Weapon script ở cha hoặc chính nó
-        {
-            // Nếu ta đang nhìn vào một khẩu súng mới, hãy tắt outline của khẩu súng cũ
-            if (hoveredWeapon != null && hoveredWeapon != weaponInParent)
+            if (weaponInParent != null) // Nếu tìm thấy Weapon script ở cha hoặc chính nó
             {
-                hoveredWeapon.GetComponent<Outline>().enabled = false;
-            }
+                // Nếu ta đang nhìn vào một khẩu súng mới, hãy tắt outline của khẩu súng cũ
+                if (hoveredWeapon != null && hoveredWeapon != weaponInParent)
+                {
+                    hoveredWeapon.GetComponent<Outline>().enabled = false;
+                }
 
-            hoveredWeapon = weaponInParent;
+                hoveredWeapon = weaponInParent;
                 hoveredWeapon.GetComponent<Outline>().enabled = true;
 
                 if (Input.GetKeyDown(KeyCode.E))
                 {
                     WeaponManager.Instance.PickupWeapon(objectHitByRaycast.gameObject);
                 }
-        }
-        else // Nếu không nhìn vào súng nữa
-        {
-            if (hoveredWeapon)
-            {
-                hoveredWeapon.GetComponent<Outline>().enabled = false;
-                hoveredWeapon = null; // Reset hoveredWeapon
             }
-        }
+            else // Nếu không nhìn vào súng nữa
+            {
+                if (hoveredWeapon)
+                {
+                    hoveredWeapon.GetComponent<Outline>().enabled = false;
+                    hoveredWeapon = null; // Reset hoveredWeapon
+                }
+            }
+            //AmmoBox
+            if (objectHitByRaycast.GetComponent<AmmoBox>())
+            {
+                hoveredAmmoBox = objectHitByRaycast.gameObject.GetComponent<AmmoBox>();
+                hoveredAmmoBox.GetComponent<Outline>().enabled = true;
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    WeaponManager.Instance.PickupAmmo(hoveredAmmoBox);
+                    Destroy(objectHitByRaycast.gameObject);
+                }
+            }
+            else
+            {
+                if (hoveredAmmoBox)
+                {
+                    hoveredAmmoBox.GetComponent<Outline>().enabled = false;
+
+                }
+            }
+            //Throwable
+            if (objectHitByRaycast.GetComponent<Throwable>())
+            {
+                hoveredThrowable = objectHitByRaycast.gameObject.GetComponent<Throwable>();
+                hoveredThrowable.GetComponent<Outline>().enabled = true;
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    WeaponManager.Instance.PickupThrowable(hoveredThrowable);
+                    Destroy(objectHitByRaycast.gameObject);
+                }
+            }
+            else
+            {
+                if (hoveredThrowable)
+                {
+                    hoveredThrowable.GetComponent<Outline>().enabled = false;
+                    
+                }
+            }
     }
     else // Nếu raycast không trúng bất cứ thứ gì (nhìn ra trời)
     {

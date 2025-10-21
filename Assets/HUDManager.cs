@@ -50,7 +50,7 @@ public class HUDManager : MonoBehaviour
         if (activeWeapon)
         {
             magazineAmmoUI.text = $"{activeWeapon.bulletsLeft / activeWeapon.bulletsPerBurst}";
-            totalAmmoUI.text = $"{activeWeapon.magazineSize / activeWeapon.bulletsPerBurst}";
+            totalAmmoUI.text = WeaponManager.Instance.CheckAmmoLeftFor(activeWeapon.thisWeaponModel).ToString();
 
             Weapon.WeaponModel model = activeWeapon.thisWeaponModel;
             ammoTypeUI.sprite = GetAmmoSprite(model);
@@ -111,5 +111,17 @@ public class HUDManager : MonoBehaviour
             }
         }
         return null;
+    }
+    public void UpdateThrowables(Throwable.ThrowableType throwable)
+    {
+        switch (throwable)
+        {
+            case Throwable.ThrowableType.Grenade:
+                lethalAmountUI.text = WeaponManager.Instance.grenades.ToString();
+                lethalUI.sprite = Resources.Load<GameObject>("Grenade").GetComponent<SpriteRenderer>().sprite;
+                break;
+            default:
+                break;
+        }
     }
 }

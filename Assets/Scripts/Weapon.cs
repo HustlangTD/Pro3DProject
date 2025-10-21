@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -11,6 +12,8 @@ public class Weapon : MonoBehaviour
 {
     // public Camera playerCamera;
     public bool isActiveWeapon;
+
+    public int weaponDamage;
 
     //shooting
     public bool isshooting, readyToShoot;
@@ -89,7 +92,7 @@ public class Weapon : MonoBehaviour
                 isshooting = Input.GetKeyDown(KeyCode.Mouse0);
             }
 
-            if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && isReloading == false)
+            if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && isReloading == false && WeaponManager.Instance.CheckAmmoLeftFor(thisWeaponModel) > 0)
             {
                 Reload();
 
@@ -115,6 +118,8 @@ public class Weapon : MonoBehaviour
 
     }
 
+    
+
     private void FireWeapon()
     {
         bulletsLeft--;
@@ -131,6 +136,9 @@ public class Weapon : MonoBehaviour
 
         // 2. Tạo viên đạn theo hướng của camera luôn, không Quaternion.identity
         GameObject bullet = Instantiate(bulletPrefab, bulletSpawn.position, Quaternion.LookRotation(shootingDirection));
+
+        Bullet bul = bullet.GetComponent<Bullet>();
+        bul.bulletDamage = weaponDamage;
 
         // 3. Bắn viên đạn
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
@@ -164,9 +172,20 @@ public class Weapon : MonoBehaviour
     }
     private void ReloadCompleted()
     {
-        bulletsLeft = magazineSize;
+        if (WeaponManager.Instance.CheckAmmoLeftFor(thisWeaponModel) > magazineSize)
+        {
+            bulletsLeft = magazineSize;
+            WeaponManager.Instance.DecreasedTotalAmmo(bulletsLeft, thisWeaponModel);
+        }
+        else
+        {
+            bulletsLeft = WeaponManager.Instance.CheckAmmoLeftFor(thisWeaponModel);
+            WeaponManager.Instance.DecreasedTotalAmmo(bulletsLeft, thisWeaponModel);
+        }
         isReloading = false;
     }
+
+
 
     private void ResetShot()
     {
