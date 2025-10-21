@@ -10,6 +10,7 @@ public class Weapon : MonoBehaviour
 
 {
     // public Camera playerCamera;
+    public bool isActiveWeapon;
 
     //shooting
     public bool isshooting, readyToShoot;
@@ -46,7 +47,7 @@ public class Weapon : MonoBehaviour
 
     public WeaponModel thisWeaponModel;
 
-    private Animator animator;
+    internal Animator animator;
 
     
 
@@ -68,45 +69,49 @@ public class Weapon : MonoBehaviour
 
     void Update()
     {
-        if (bulletsLeft == 0 && isshooting)
+        if (isActiveWeapon)
         {
-            SoundManager.Instance.emptyMagazineShoundPistol.Play();
+
+            if (bulletsLeft == 0 && isshooting)
+            {
+                SoundManager.Instance.emptyMagazineShoundPistol.Play();
+            }
+
+
+            if (currentShootingMode == shootingMode.Auto)
+            {
+                //Holding left mouse button 
+                isshooting = Input.GetKey(KeyCode.Mouse0);
+            }
+            else if (currentShootingMode == shootingMode.Single || currentShootingMode == shootingMode.Burst)
+            {
+                //Pressing left mouse button
+                isshooting = Input.GetKeyDown(KeyCode.Mouse0);
+            }
+
+            if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && isReloading == false)
+            {
+                Reload();
+
+            }
+            if (readyToShoot && isshooting == false && isReloading == false && bulletsLeft <= 0)
+            {
+                Reload();
+
+            }
+
+
+            if (readyToShoot && isshooting && !isReloading && bulletsLeft > 0)
+            {
+                burstBulletLeft = bulletsPerBurst;
+                FireWeapon();
+            }
+
+            // if (AmmoManager.Instance.ammoDisplay != null)
+            // {
+            //     AmmoManager.Instance.ammoDisplay.text = $"{bulletsLeft / bulletsPerBurst}/{magazineSize / bulletsPerBurst}";
+            // }
         }
-
-
-        if (currentShootingMode == shootingMode.Auto)
-        {
-            //Holding left mouse button 
-            isshooting = Input.GetKey(KeyCode.Mouse0);
-        }
-        else if (currentShootingMode == shootingMode.Single || currentShootingMode == shootingMode.Burst)
-        {
-            //Pressing left mouse button
-            isshooting = Input.GetKeyDown(KeyCode.Mouse0);
-        }
-
-        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && isReloading == false)
-        {
-            Reload();
-
-        } 
-        if (readyToShoot && isshooting == false && isReloading == false && bulletsLeft <= 0)
-        {
-            Reload();
-            
-        }
-
-
-        if (readyToShoot && isshooting && !isReloading && bulletsLeft > 0)
-        {
-            burstBulletLeft = bulletsPerBurst;
-            FireWeapon();
-        }
-
-        if (AmmoManager.Instance.ammoDisplay != null)
-        {
-            AmmoManager.Instance.ammoDisplay.text = $"{bulletsLeft / bulletsPerBurst}/{magazineSize / bulletsPerBurst}";
-        }   
 
     }
 

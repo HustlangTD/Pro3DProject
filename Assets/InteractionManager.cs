@@ -43,7 +43,12 @@ public class InteractionManager : MonoBehaviour
             }
 
             hoveredWeapon = weaponInParent;
-            hoveredWeapon.GetComponent<Outline>().enabled = true;
+                hoveredWeapon.GetComponent<Outline>().enabled = true;
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    WeaponManager.Instance.PickupWeapon(objectHitByRaycast.gameObject);
+                }
         }
         else // Nếu không nhìn vào súng nữa
         {
