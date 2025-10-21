@@ -20,7 +20,7 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damageAmount)
     {
         HP -= damageAmount;
-        if (HP <= 0)
+        if (HP <= 0 && !isDead)
         {
             int randomValue = Random.Range(0, 2);
 
@@ -39,10 +39,19 @@ public class Enemy : MonoBehaviour
 
             //Dead sound
             SoundManager.Instance.zombieChannel2.PlayOneShot(SoundManager.Instance.zombieDeath);
+            navAgent.enabled = false;
+
+            if (ScoreManager.Instance != null)
+            {
+                ScoreManager.Instance.AddScore(100);
+            }
+
+            // Gọi hàm xóa sau 5 giây
+            Destroy(gameObject, 5f);
 
 
         }
-        else
+        else if (!isDead)
         {
             animator.SetTrigger("DAMAGE");
 
