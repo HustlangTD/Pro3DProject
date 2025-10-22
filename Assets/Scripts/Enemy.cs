@@ -47,7 +47,7 @@ public class Enemy : MonoBehaviour
             }
 
             // Gọi hàm xóa sau 5 giây
-            Destroy(gameObject, 5f);
+            Destroy(gameObject, 4f);
 
 
         }

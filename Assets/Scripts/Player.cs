@@ -13,6 +13,8 @@ public class Player : MonoBehaviour
     public TextMeshProUGUI playerHealthUI;
     public GameObject gameOverUI;
 
+    public GameObject gameOverButtonsUI;
+
     public bool isDead;
 
     // public Animator cameraAnimator;
@@ -63,6 +65,9 @@ public class Player : MonoBehaviour
         GetComponent<ScreenFader>().StartFade();
         StartCoroutine(ShowGameOverUI());
 
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
 
 
     }
@@ -71,6 +76,9 @@ public class Player : MonoBehaviour
     {
         yield return new WaitForSeconds(1f);
         gameOverUI.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(1.5f);
+        gameOverButtonsUI.SetActive(true);
     }
 
     private IEnumerator BloodyScreenEffect()
