@@ -10,6 +10,7 @@ public class NhanIntroManager : MonoBehaviour
 {
     [Header("UI Panels")]
     public GameObject panelIntro;
+    public GameObject panelGuide;
     public GameObject panelSetting;
 
     [Header("UI Buttons")]
@@ -26,6 +27,7 @@ public class NhanIntroManager : MonoBehaviour
     public GameObject player;
     public AudioSource bgMusic;
     public Camera mainCamera;
+    public GameObject boat;
 
     [Header("Voice Settings (AI Voice Offline)")]
     public AudioSource introVoice;
@@ -35,6 +37,7 @@ public class NhanIntroManager : MonoBehaviour
     public PlayableDirector introTimeline; // 🎬 Gắn Playable Director vào đây
 
     private bool isIntroPlaying = false;
+    private bool guideDone = false;
     private float defaultVolume = 0.5f; // ✅ Volume mặc định 50%
 
     string[] introLines = new string[]
@@ -63,7 +66,8 @@ public class NhanIntroManager : MonoBehaviour
                 Destroy(systems[i].gameObject);
         }
 
-        // ✅ Ẩn các panel ban đầu
+        // ✅ Ẩn panel ban đầu
+        if (panelGuide) panelGuide.SetActive(false);
         if (panelSetting) panelSetting.SetActive(false);
         if (player) player.SetActive(false);
 
@@ -82,6 +86,7 @@ public class NhanIntroManager : MonoBehaviour
         if (introVoice) introVoice.volume = defaultVolume;
 
         if (mainCamera == null) mainCamera = Camera.main;
+        if (boat == null) boat = GameObject.FindWithTag("Boat");
 
         // ✅ Bắt đầu intro
         StartCoroutine(PlayIntro());
@@ -90,10 +95,10 @@ public class NhanIntroManager : MonoBehaviour
 
     void Update()
     {
-        // Xoay camera nhẹ trong intro cho sinh động
-        if (isIntroPlaying && mainCamera)
+        // Xoay camera quanh thuyền trong intro
+        if (isIntroPlaying && mainCamera && boat)
         {
-            mainCamera.transform.RotateAround(Vector3.zero, Vector3.up, 5f * Time.deltaTime);
+            mainCamera.transform.RotateAround(boat.transform.position, Vector3.up, 5f * Time.deltaTime);
         }
     }
 
@@ -102,14 +107,14 @@ public class NhanIntroManager : MonoBehaviour
         isIntroPlaying = true;
         if (panelIntro) panelIntro.SetActive(true);
 
-        // ✅ Phát voice
+        // ✅ Bắt đầu voice
         if (introVoice && introClip)
         {
             introVoice.clip = introClip;
             introVoice.Play();
         }
 
-        // ✅ Hiển thị từng dòng intro + hình
+        // ✅ Hiển thị text + ảnh theo từng đoạn
         for (int i = 0; i < introLines.Length; i++)
         {
             if (subtitleText) subtitleText.text = introLines[i];
@@ -119,18 +124,68 @@ public class NhanIntroManager : MonoBehaviour
             yield return new WaitForSeconds(4f);
         }
 
-        // ✅ Đợi voice phát xong hoàn toàn
+        // ✅ Chờ voice phát xong hoàn toàn
         if (introVoice && introVoice.isPlaying)
         {
             Debug.Log("🎧 Đợi voice clip phát xong...");
             yield return new WaitWhile(() => introVoice.isPlaying);
         }
 
-        // ✅ Kết thúc intro
+        // ✅ Kết thúc intro text
         isIntroPlaying = false;
+        if (panelIntro) panelIntro.SetActive(false);
 
-        // Sau intro → chạy Timeline
-        StartCoroutine(PlayTimelineThenLoadScene());
+        // ✅ Bắt đầu cutscene Timeline (sau intro)
+        if (introTimeline != null)
+        {
+            Debug.Log("🎬 Bắt đầu phát Timeline sau khi intro kết thúc...");
+            introTimeline.Play();
+            yield return new WaitUntil(() => introTimeline.state != PlayState.Playing);
+            Debug.Log("✅ Timeline kết thúc");
+        }
+
+        // ✅ Khi Timeline xong → hiện phần hướng dẫn
+        StartCoroutine(ShowGuide());
+    }
+
+    IEnumerator ShowGuide()
+    {
+        if (panelGuide) panelGuide.SetActive(true);
+        if (player) player.SetActive(true);
+
+        TextMeshProUGUI guideText = panelGuide.GetComponentInChildren<TextMeshProUGUI>();
+        if (guideText != null)
+        {
+            guideText.text = "Di chuyển: W A S D";
+            yield return new WaitForSeconds(2.5f);
+            guideText.text = "Nhảy: Space";
+            yield return new WaitForSeconds(2.5f);
+            guideText.text = "Bắn: Chuột trái";
+            yield return new WaitForSeconds(3f);
+        }
+
+        if (panelGuide) panelGuide.SetActive(false);
+        guideDone = true;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (guideDone && other.CompareTag("Boat"))
+        {
+            OnBoatReached();
+        }
+    }
+
+    public void OnBoatReached()
+    {
+        Debug.Log("🚤 Chạm thuyền → Chuyển qua GameScene sau 2 giây");
+        StartCoroutine(LoadMainSceneAfterDelay());
+    }
+
+    IEnumerator LoadMainSceneAfterDelay()
+    {
+        yield return new WaitForSeconds(2f);
+        SceneManager.LoadScene("Scene 5");
     }
 
     public void SkipIntro()
@@ -143,36 +198,9 @@ public class NhanIntroManager : MonoBehaviour
         if (introTimeline && introTimeline.state == PlayState.Playing)
             introTimeline.Stop();
 
-        // 🟢 Hiện hình cuối cùng vài giây trước khi chạy timeline
-        if (panelIntro) panelIntro.SetActive(true);
-        if (introImage && introImages.Length > 0)
-            introImage.sprite = introImages[introImages.Length - 1];
-        if (subtitleText) subtitleText.text = "Nhiệm vụ đầu tiên… cũng có thể là cuối cùng.";
-
-        Debug.Log("⏩ Skip intro → Hiện hình cuối cùng → Chuẩn bị chạy Timeline");
-        StartCoroutine(PlayTimelineThenLoadScene());
-    }
-
-    IEnumerator PlayTimelineThenLoadScene()
-    {
-        yield return new WaitForSeconds(2f); // Giữ hình cuối 2 giây
-
-        // 🟢 Ẩn hình & text trước khi Timeline bắt đầu
         if (panelIntro) panelIntro.SetActive(false);
-        if (subtitleText) subtitleText.text = "";
-        if (introImage) introImage.enabled = false;
-
-        // 🎬 Chạy Timeline
-        if (introTimeline != null)
-        {
-            Debug.Log("🎬 Bắt đầu phát Timeline...");
-            introTimeline.Play();
-            yield return new WaitUntil(() => introTimeline.state != PlayState.Playing);
-            Debug.Log("✅ Timeline kết thúc → Chuyển Scene");
-        }
-
-        // ✅ Sau khi Timeline kết thúc → qua scene chính
-        SceneManager.LoadScene("Scene 5");
+        StartCoroutine(ShowGuide());
+        Debug.Log("⏩ Bỏ qua intro và timeline");
     }
 
     public void ChangeVolume(float value)
@@ -189,7 +217,8 @@ public class NhanIntroManager : MonoBehaviour
     IEnumerator SceneAutoTimeout()
     {
         yield return new WaitForSeconds(180f);
+        if (!guideDone) yield break;
         Debug.Log("🕒 Hết 180s → Tự qua scene chính");
-        SceneManager.LoadScene("Scene 5");
+        StartCoroutine(LoadMainSceneAfterDelay());
     }
 }

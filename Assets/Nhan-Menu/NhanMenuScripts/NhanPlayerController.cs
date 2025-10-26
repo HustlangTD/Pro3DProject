@@ -3,49 +3,54 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class NhanPlayerController : MonoBehaviour
 {
-    [Header("Movement Settings")]
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
-
-    [Header("Camera Settings")]
-    public float mouseSensitivity = 200f;
-    public Transform cameraTransform;
-    public float minLookX = -70f;
-    public float maxLookX = 75f;
-    public float cameraHeight = 1.7f;
+    public float mouseSensitivity = 100f;
+    public Transform cameraTransform; // Camera sẽ được gắn vào nhân vật
 
     private Rigidbody rb;
     private bool isGrounded = true;
     private float xRotation = 0f;
-    private float moveInputX;
-    private float moveInputZ;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-        rb.linearDamping = 2f;
-        rb.angularDamping = 5f;
-
+        
+        // Đảm bảo camera được gán
         if (cameraTransform == null)
+        {
             cameraTransform = Camera.main.transform;
+        }
 
+        // Đặt camera làm con của nhân vật và định vị ở vị trí "đầu"
         cameraTransform.SetParent(transform);
-        cameraTransform.localPosition = new Vector3(0f, cameraHeight, 0f);
+        cameraTransform.localPosition = new Vector3(0f, 1f, 0f); // Đặt camera ở vị trí đầu (điều chỉnh theo mô hình nhân vật)
         cameraTransform.localRotation = Quaternion.identity;
 
-        Cursor.lockState = CursorLockMode.Locked;
+        // Khóa và ẩn con trỏ chuột
         Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     void Update()
     {
-        moveInputX = Input.GetAxisRaw("Horizontal");
-        moveInputZ = Input.GetAxisRaw("Vertical");
+        Move();
+        Jump();
         RotateWithMouse();
+    }
 
+    void Move()
+    {
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+
+        // Di chuyển theo hướng tương đối với nhân vật
+        Vector3 moveDir = (transform.right * h + transform.forward * v).normalized;
+        rb.MovePosition(rb.position + moveDir * moveSpeed * Time.deltaTime);
+    }
+
+    void Jump()
+    {
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
@@ -53,32 +58,27 @@ public class NhanPlayerController : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
-    {
-        Move();
-    }
-
-    void Move()
-    {
-        Vector3 moveDir = (transform.right * moveInputX + transform.forward * moveInputZ).normalized;
-        Vector3 targetPos = rb.position + moveDir * moveSpeed * Time.fixedDeltaTime;
-        rb.MovePosition(targetPos);
-    }
-
     void RotateWithMouse()
     {
-        float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        // Lấy input chuột
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
+        // Xoay nhân vật theo trục Y (trái-phải)
         transform.Rotate(Vector3.up * mouseX);
+
+        // Xoay camera theo trục X (lên-xuống)
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, minLookX, maxLookX);
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f); // Giới hạn góc nhìn lên/xuống
         cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     void OnCollisionEnter(Collision collision)
     {
+        // Kiểm tra va chạm với mặt đất
         if (collision.gameObject.CompareTag("Ground"))
+        {
             isGrounded = true;
+        }
     }
 }
