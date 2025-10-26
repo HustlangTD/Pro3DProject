@@ -30,6 +30,14 @@ public class SoundManager : MonoBehaviour
 
     public AudioClip gameOverMusic;
 
+    [Header("Boss Sounds")]
+    public AudioSource bossChannel; // nên là 1 AudioSource riêng
+    public AudioClip bossPatrolSound;
+    public AudioClip bossRageSound;
+    public AudioClip bossRunSound;
+    public AudioClip bossAttackSound;
+    public AudioClip bossDeathSound;
+
 
 
 
@@ -67,12 +75,36 @@ public class SoundManager : MonoBehaviour
         switch (weapon)
         {
             case WeaponModel.Pistol:
-                reloadingShoundPistol.Play(); 
+                reloadingShoundPistol.Play();
                 break;
             case WeaponModel.M4A1:
                 reloadingShoundPistol.Play();
                 break;
         }
+    }
+    public void PlayBossPatrolSound()
+    {
+        bossChannel.PlayOneShot(bossPatrolSound);
+    }
+
+    public void PlayBossRageSound()
+    {
+        bossChannel.PlayOneShot(bossRageSound);
+    }
+
+    public void PlayBossRunSound()
+    {
+        bossChannel.PlayOneShot(bossRunSound);
+    }
+
+    public void PlayBossAttackSound()
+    {
+        bossChannel.PlayOneShot(bossAttackSound);
+    }
+
+    public void PlayBossDeathSound()
+    {
+        bossChannel.PlayOneShot(bossDeathSound);
     }
     
     

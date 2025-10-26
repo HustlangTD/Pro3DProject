@@ -376,7 +376,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2edd2ba07dcdd7429fc0f8d31bd39f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  HP: 120
+  HP: 100
   isDead: 0
 --- !u!114 &9015370167392971207
 MonoBehaviour:
@@ -391,7 +391,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   zombieHand: {fileID: 5839962323323573652}
-  zombieDamage: 10
+  zombieDamage: 5
 --- !u!1 &822062806558184226
 GameObject:
   m_ObjectHideFlags: 0

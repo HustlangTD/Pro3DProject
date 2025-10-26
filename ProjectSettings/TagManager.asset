@@ -12,6 +12,7 @@ TagManager:
   - Zombie
   - Waypoints
   - ZombieHand
+  - Boss
   layers:
   - Default
   - TransparentFX

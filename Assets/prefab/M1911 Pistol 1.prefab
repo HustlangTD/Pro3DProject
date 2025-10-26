@@ -4992,7 +4992,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isActiveWeapon: 0
-  weaponDamage: 35
+  weaponDamage: 50
   isshooting: 0
   readyToShoot: 0
   shootingdelay: 0.5

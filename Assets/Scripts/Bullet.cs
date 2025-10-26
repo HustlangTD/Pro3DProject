@@ -10,27 +10,42 @@ public class Bullet : MonoBehaviour
         if (objectWeHit.gameObject.CompareTag("Enemy"))
         {
             print("Hit " + objectWeHit.gameObject.name + "!");
-            CreateBullerImpactEffect(objectWeHit);
-            Destroy(gameObject);
             
+            // Gây sát thương cho Enemy
+            Enemy enemyScript = objectWeHit.gameObject.GetComponent<Enemy>();
+            if (enemyScript != null && !enemyScript.isDead)
+            {
+                enemyScript.TakeDamage(bulletDamage);
+            }
+
+            // Tạo hiệu ứng và hủy đạn
+            CreateBullerImpactEffect(objectWeHit);
+            CreateBloodSprayEffect(objectWeHit);
+            Destroy(gameObject);
         }
-        if (objectWeHit.gameObject.CompareTag("Wall"))
+        else if (objectWeHit.gameObject.CompareTag("Wall"))
         {
             print("Hit a wall");
             CreateBullerImpactEffect(objectWeHit);
             Destroy(gameObject);
         }
-        if (objectWeHit.gameObject.CompareTag("Enemy"))
+        
+        else if (objectWeHit.gameObject.CompareTag("Boss"))
         {
-            if (objectWeHit.gameObject.GetComponent<Enemy>().isDead == false)
+            print("Hit the BOSS!");
+
+            // 1. Lấy component BossBeetleAI từ đối tượng va chạm
+            BossBeetleAI boss = objectWeHit.gameObject.GetComponent<BossBeetleAI>();
+
+            // 2. Nếu tìm thấy script, gọi hàm TakeDamage của Boss
+            if (boss != null)
             {
-                objectWeHit.gameObject.GetComponent<Enemy>().TakeDamage(bulletDamage);
+                boss.TakeDamage(bulletDamage);
             }
-            
-            objectWeHit.gameObject.GetComponent<Enemy>().TakeDamage(bulletDamage);
 
-            CreateBloodSprayEffect(objectWeHit);
-
+            // 3. Tạo hiệu ứng (tương tự Enemy) và hủy đạn
+            CreateBullerImpactEffect(objectWeHit);
+            CreateBloodSprayEffect(objectWeHit); 
             Destroy(gameObject);
         }
     }

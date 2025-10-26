@@ -1,28 +1,31 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
 
 public class BossBeetleAI : MonoBehaviour
 {
     [Header("References")]
-    public Transform player;                       // Gán player
-    public GameObject healthBarUI;                 // Thanh máu trên đầu boss
-    public GameObject victoryPanel;                // Panel chiến thắng
-    public Animator anim;                          // Animator của boss
-    public NavMeshAgent agent;                     // NavMeshAgent
-    public Transform[] patrolPoints;               // 4 điểm tuần tra
-    public Transform[] attackPoints;               // 2 điểm chạm để gây damage
+    public Transform player;
+    public Slider healthBar;
+    public GameObject victoryPanel;
+    public Animator anim;
+    public NavMeshAgent agent;
+    public Transform[] patrolPoints;
+    public Transform[] attackPoints;
 
     [Header("Stats")]
     public int maxHP = 500;
     public int currentHP;
     public int damage = 30;
-    public float detectionRange = 20f;             // Khoảng cách phát hiện player
-    public float attackRange = 3f;                 // Khoảng cách tấn công player
-    public float patrolWaitTime = 3f;              // Thời gian dừng lại giữa các điểm
-    public float idleTime = 2f;                    // Thời gian idle giữa patrol
+    public float detectionRange = 20f;
+    public float attackRange = 3f;
+    public float patrolSpeed = 2.5f;
+    public float chaseSpeed = 5.5f;
+    public float patrolWaitTime = 3f;
+    public float idleTime = 2f;
 
     [Header("Internal States")]
     private int patrolIndex = 0;
@@ -41,8 +44,13 @@ public class BossBeetleAI : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
         playerScript = player.GetComponent<Player>();
-        healthBarUI.SetActive(false);
+        healthBar.maxValue = maxHP;     // <-- MỚI: Cài đặt giá trị tối đa cho thanh máu
+        healthBar.value = currentHP;    // <-- MỚI: Cài đặt giá trị hiện tại
+        healthBar.gameObject.SetActive(false); // <-- MỚI: Ẩn thanh máu
         GoToNextPatrolPoint();
+
+        // 🦗 Phát âm thanh patrol khi bắt đầu
+        SoundManager.Instance.PlayBossPatrolSound();
     }
 
     void Update()
@@ -51,24 +59,21 @@ public class BossBeetleAI : MonoBehaviour
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        // Nếu chưa rage mà player lại gần
+        // Rage khi player lại gần
         if (!hasTriggeredRage && distanceToPlayer <= detectionRange)
         {
             StartCoroutine(EnterRage());
             return;
         }
 
-        // Nếu đang rage hoặc idle thì không patrol
         if (isRaging || isIdle) return;
 
-        // Nếu đã rage rồi => chase và attack
         if (hasTriggeredRage)
         {
             ChaseAndAttack(distanceToPlayer);
             return;
         }
 
-        // Ngược lại, tiếp tục patrol
         Patrol();
     }
 
@@ -77,11 +82,20 @@ public class BossBeetleAI : MonoBehaviour
     // ===============================
     void Patrol()
     {
+        agent.speed = patrolSpeed;
+
         if (!agent.pathPending && agent.remainingDistance < 0.5f && !isIdle)
         {
             StartCoroutine(PatrolWait());
         }
+
         anim.SetBool("isWalking", true);
+
+        // 🔊 Bảo đảm âm thanh patrol chỉ phát một lần khi di chuyển
+        if (!SoundManager.Instance.bossChannel.isPlaying)
+        {
+            SoundManager.Instance.PlayBossPatrolSound();
+        }
     }
 
     IEnumerator PatrolWait()
@@ -114,9 +128,22 @@ public class BossBeetleAI : MonoBehaviour
         agent.isStopped = true;
 
         anim.SetTrigger("Rage");
-        healthBarUI.SetActive(true);
+        healthBar.gameObject.SetActive(true);
 
-        yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(0).length + 0.5f);
+        // 🔊 Phát âm thanh Rage
+        SoundManager.Instance.PlayBossRageSound();
+
+        float rageAnimTime = 2.5f;
+        foreach (var clip in anim.runtimeAnimatorController.animationClips)
+        {
+            if (clip.name.ToLower().Contains("rage"))
+            {
+                rageAnimTime = clip.length;
+                break;
+            }
+        }
+
+        yield return new WaitForSeconds(rageAnimTime + 0.3f);
 
         isRaging = false;
         agent.isStopped = false;
@@ -127,42 +154,75 @@ public class BossBeetleAI : MonoBehaviour
     // ===============================
     void ChaseAndAttack(float distanceToPlayer)
     {
-        if (distanceToPlayer > attackRange)
+        // Boss CHẠY tới player
+        if (distanceToPlayer > attackRange - 0.5f)
         {
-            // Chase player
-            agent.isStopped = false;
-            agent.SetDestination(player.position);
+            if (agent.isStopped)
+                agent.isStopped = false;
+
             anim.SetBool("isRunning", true);
+            agent.speed = chaseSpeed;
+            agent.SetDestination(player.position);
+
+            
+            anim.ResetTrigger("Attack1");
+            anim.ResetTrigger("Attack2");
+
+            // 🔊 Nếu chưa phát tiếng chạy
+            if (!SoundManager.Instance.bossChannel.isPlaying)
+                SoundManager.Instance.PlayBossRunSound();
         }
         else
         {
-            // Attack
+            // Boss trong tầm tấn công
             agent.isStopped = true;
             anim.SetBool("isRunning", false);
 
             if (!isAttacking)
-            {
                 StartCoroutine(AttackPlayer());
-            }
         }
     }
+
 
     IEnumerator AttackPlayer()
     {
         isAttacking = true;
 
-        // Random chọn attack 1 hoặc 2
+        // 🔁 Boss chọn ngẫu nhiên 1 trong 2 chiêu mỗi lần
         int attackIndex = Random.Range(1, 3);
         string attackAnim = (attackIndex == 1) ? "Attack1" : "Attack2";
 
+        // Reset 2 trigger để đảm bảo Animator không giữ trigger cũ
+        anim.ResetTrigger("Attack1");
+        anim.ResetTrigger("Attack2");
+
+        // Set trigger tấn công ngẫu nhiên
         anim.SetTrigger(attackAnim);
 
-        yield return new WaitForSeconds(0.5f); // delay trước khi gây damage
+        // 🔊 Phát âm thanh tấn công
+        SoundManager.Instance.PlayBossAttackSound();
+
+        // Đợi nửa giây để khớp với thời điểm ra đòn
+        yield return new WaitForSeconds(0.5f);
         DamagePlayer();
 
-        yield return new WaitForSeconds(1.2f); // tổng thời gian tấn công
+        // 🕐 Lấy độ dài animation tương ứng để đợi xong trước khi tấn công tiếp
+        float attackDuration = 1.2f;
+        foreach (var clip in anim.runtimeAnimatorController.animationClips)
+        {
+            if (clip.name.ToLower().Contains(attackAnim.ToLower()))
+            {
+                attackDuration = clip.length;
+                break;
+            }
+        }
+
+        // Chờ hết animation rồi mới cho phép đánh tiếp
+        yield return new WaitForSeconds(attackDuration);
+
         isAttacking = false;
     }
+
 
     void DamagePlayer()
     {
@@ -187,6 +247,8 @@ public class BossBeetleAI : MonoBehaviour
         if (isDead) return;
 
         currentHP -= dmg;
+        healthBar.value = currentHP;
+        
         if (currentHP <= 0)
         {
             StartCoroutine(Die());
@@ -198,13 +260,24 @@ public class BossBeetleAI : MonoBehaviour
         isDead = true;
         agent.isStopped = true;
         anim.SetTrigger("Death");
-        yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(0).length + 1f);
 
-        // Hiện victory UI
+        // 🔊 Âm thanh chết
+        SoundManager.Instance.PlayBossDeathSound();
+
+        float deathAnimTime = 3f;
+        foreach (var clip in anim.runtimeAnimatorController.animationClips)
+        {
+            if (clip.name.ToLower().Contains("death"))
+            {
+                deathAnimTime = clip.length;
+                break;
+            }
+        }
+
+        yield return new WaitForSeconds(deathAnimTime + 1f);
+
         victoryPanel.SetActive(true);
-        Time.timeScale = 0f; // dừng game
-
-        // Unlock chuột để bấm nút
+        Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
