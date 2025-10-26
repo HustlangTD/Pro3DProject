@@ -6,27 +6,40 @@ public class ZombieChaseState : StateMachineBehaviour
 
     Transform player;
     NavMeshAgent agent;
+    Enemy enemyScript; // <-- MỚI: Thêm biến để giữ script Enemy
+
     public float chaseSpeed = 6f;
 
     public float stopChasingDistance = 21;
     public float attackingDistance = 2.5f;
+
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-       player = GameObject.FindGameObjectWithTag("Player").transform;
+        player = GameObject.FindGameObjectWithTag("Player").transform;
         agent = animator.GetComponent<NavMeshAgent>();
-       
-       agent.speed = chaseSpeed;
+        enemyScript = animator.GetComponent<Enemy>(); // <-- MỚI: Lấy script Enemy lúc bắt đầu
+        
+        agent.speed = chaseSpeed;
     }
 
     
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        // ===========================================
+        // ===== KIỂM TRA ĐIỀU KIỆN CHẾT (QUAN TRỌNG) =====
+        // ===========================================
+        if (enemyScript != null && enemyScript.isDead) // <-- MỚI: Nếu enemy đã chết
+        {
+            return; // <-- MỚI: Dừng mọi hành động đuổi theo
+        }
+        // ===========================================
+
         if (SoundManager.Instance.zombieChannel.isPlaying == false)
         {
             SoundManager.Instance.zombieChannel.PlayOneShot(SoundManager.Instance.zombieChase);
-            
         }
 
+        // Chỉ chạy các lệnh này nếu enemy còn sống
         agent.SetDestination(player.position);
         animator.transform.LookAt(player);
 
@@ -35,9 +48,9 @@ public class ZombieChaseState : StateMachineBehaviour
         if (distanceFromPlayer > stopChasingDistance)
         {
             animator.SetBool("isChasing", false);
-            
         }
-         if (distanceFromPlayer < attackingDistance)
+        
+        if (distanceFromPlayer < attackingDistance)
         {
             animator.SetBool("isAttacking", true);
         }
@@ -46,8 +59,12 @@ public class ZombieChaseState : StateMachineBehaviour
     
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        agent.SetDestination(agent.transform.position);
-       
-       SoundManager.Instance.zombieChannel.Stop();
+        // Kiểm tra agent còn tồn tại không (phòng trường hợp enemy bị destroy)
+        if (agent != null && agent.isOnNavMesh && agent.enabled)
+        {
+            agent.SetDestination(agent.transform.position);
+        }
+        
+        SoundManager.Instance.zombieChannel.Stop();
     }
 }

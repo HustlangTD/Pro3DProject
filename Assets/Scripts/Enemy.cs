@@ -17,39 +17,51 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage(int damageAmount)
     {
+        // Nếu đã chết rồi thì không nhận thêm sát thương
+        if (isDead) return; 
+
         HP -= damageAmount;
 
-        if (HP <= 0 && !isDead)
+        if (HP <= 0) // Không cần check !isDead nữa vì đã check ở trên
         {
             isDead = true;
 
-            // Random animation chết
+            // 1. Dừng NavMeshAgent ngay lập tức để không bị trôi
+            if (navAgent != null && navAgent.isOnNavMesh)
+            {
+                navAgent.isStopped = true; // Dừng di chuyển ngay
+                navAgent.enabled = false;  // Tắt component
+            }
+
+            // 2. Chơi animation chết (KHÔNG TẮT ANIMATOR)
             int randomValue = Random.Range(0, 2);
             animator.SetTrigger(randomValue == 0 ? "DIE1" : "DIE2");
 
-            // Tắt Animator để ZombieChaseState ngừng gọi SetDestination
-            if (animator != null)
-                animator.enabled = false;
+            // 3. Tắt Animator đi (đã bị xóa)
+            // if (animator != null)
+            //     animator.enabled = false; // <-- XÓA DÒNG NÀY
 
-            // Tắt NavMeshAgent an toàn
-            if (navAgent != null && navAgent.isOnNavMesh)
-                navAgent.enabled = false;
-
-            // Dead sound
+            // 4. Phát âm thanh chết
             if (SoundManager.Instance != null)
                 SoundManager.Instance.zombieChannel2.PlayOneShot(SoundManager.Instance.zombieDeath);
 
-            // Cộng điểm
+            // 5. Cộng điểm
             if (ScoreManager.Instance != null)
                 ScoreManager.Instance.AddScore(100);
 
-            // Cho enemy rớt xuống layer vô hại
+            // 6. Cho enemy rớt xuống layer vô hại
             gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            
+            // (Tùy chọn) Tắt các Collider để đạn bay xuyên qua
+            foreach (Collider col in GetComponents<Collider>())
+            {
+                col.enabled = false;
+            }
 
-            // Xóa sau 4 giây
+            // 7. Xóa sau 4 giây (cho animation chạy)
             Destroy(gameObject, 4f);
         }
-        else if (!isDead)
+        else // Nếu chưa chết (isDead == false)
         {
             animator.SetTrigger("DAMAGE");
 
