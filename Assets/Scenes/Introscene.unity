@@ -5027,7 +5027,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!4 &1104178851 stripped
 Transform:
@@ -7172,8 +7172,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 80.45997, y: 124.546776, z: 317.40506}
-  m_Center: {x: 0.024592903, y: -12.330169, z: 9.841573}
+  m_Size: {x: 217.69542, y: 124.546776, z: 317.40506}
+  m_Center: {x: -0.45663118, y: -12.330169, z: 9.841573}
 --- !u!4 &1601298903 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 442594, guid: 1a5e2f40365fe44ada271dd97ea7506f, type: 3}

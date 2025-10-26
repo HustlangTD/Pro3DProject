@@ -326,7 +326,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbf24049965ea264ea72f5f8c213689c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  delay: 3
+  delay: 2
   damageRadius: 20
   explosionForce: 1200
   hasBeenThrown: 0
