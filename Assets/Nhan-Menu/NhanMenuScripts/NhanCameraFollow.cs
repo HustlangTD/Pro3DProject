@@ -1,29 +1,55 @@
 using UnityEngine;
 
-public class NhanCameraFollow : MonoBehaviour
+public class NhanCameraFirstPerson : MonoBehaviour
 {
-    public Transform target;        // Player
-    public Vector3 offset = new Vector3(0, 3, -6);
-    public float followSpeed = 5f;
-    public float rotateSpeed = 2f;
+    [Header("Target Settings")]
+    public Transform target;              // Player (thường là nhân vật)
+    public Vector3 offset = new Vector3(0f, 1.7f, 0f); // vị trí camera (đầu người)
 
-    private float yaw;
-    private float pitch;
+    [Header("Look Settings")]
+    public float mouseSensitivity = 100f;
+    public float maxLookUp = 75f;
+    public float maxLookDown = -60f;
+
+    private float xRotation = 0f;         // góc nhìn dọc
+    private float yRotation = 0f;         // góc xoay ngang (theo player)
+
+    void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        if (target == null)
+        {
+            Debug.LogWarning("NhanCameraFirstPerson: Chưa gán target (Player).");
+            return;
+        }
+
+        // Đặt camera ở vị trí đầu người
+        transform.position = target.position + offset;
+        transform.rotation = target.rotation;
+    }
 
     void LateUpdate()
     {
         if (target == null) return;
 
-        // Xoay camera bằng chuột
-        yaw += Input.GetAxis("Mouse X") * rotateSpeed;
-        pitch -= Input.GetAxis("Mouse Y") * rotateSpeed;
-        pitch = Mathf.Clamp(pitch, -20f, 60f);
+        // Nhận input chuột
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        Quaternion rotation = Quaternion.Euler(pitch, yaw, 0);
+        // Xử lý góc nhìn
+        yRotation += mouseX;
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, maxLookDown, maxLookUp);
 
-        // Theo dõi player
-        Vector3 desiredPosition = target.position + rotation * offset;
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * followSpeed);
-        transform.LookAt(target.position + Vector3.up * 1.5f);
+        // Xoay camera
+        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
+
+        // Xoay Player theo hướng ngang (y)
+        target.rotation = Quaternion.Euler(0f, yRotation, 0f);
+
+        // Giữ camera ở vị trí đầu người
+        transform.position = target.position + offset;
     }
 }
