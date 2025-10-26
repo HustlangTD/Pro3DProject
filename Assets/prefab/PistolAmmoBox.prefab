@@ -237,7 +237,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d105058cfac1494396b5c684070a918, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ammoAmount: 80
+  ammoAmount: 100
   ammotype: 0
 --- !u!114 &245650562002853174
 MonoBehaviour:

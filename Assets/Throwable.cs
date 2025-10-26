@@ -84,7 +84,7 @@ public class Throwable : MonoBehaviour
         CameraShake camShake = Camera.main.GetComponent<CameraShake>();
         if (camShake != null)
         {
-            StartCoroutine(camShake.Shake(1f, 10f)); // thời gian 0.2s, độ mạnh 0.3
+            StartCoroutine(camShake.Shake(3f, 5f)); // thời gian 0.2s, độ mạnh 0.3
         }
 
     }
