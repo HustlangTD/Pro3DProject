@@ -1343,6 +1343,7 @@ MonoBehaviour:
   playerNameInput: {fileID: 1075334121}
   playGameButton: {fileID: 924376330}
   networkRunner: {fileID: 0}
+  playerPrefab: {fileID: 3730656496349959334, guid: 39b8342b7fb134b4da4fe2cfdd5533d8, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

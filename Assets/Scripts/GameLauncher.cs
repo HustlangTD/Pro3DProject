@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 using Fusion;
 using Fusion.Sockets;
 using TMPro;
@@ -16,6 +17,8 @@ public class GameLauncher : MonoBehaviour, INetworkRunnerCallbacks
     public Button playGameButton;
 
     public NetworkRunner networkRunner;
+
+    public NetworkPrefabRef playerPrefab;
     
 
     public void OnConnectedToServer(NetworkRunner runner)
@@ -70,12 +73,12 @@ public class GameLauncher : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log("Player Joined");
+        
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log("Player Left");
+        
     }
 
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress)
@@ -127,7 +130,8 @@ public class GameLauncher : MonoBehaviour, INetworkRunnerCallbacks
     {
         networkRunner = gameObject.AddComponent<NetworkRunner>();
         networkRunner.ProvideInput = true;
-        networkRunner.AddCallbacks(this);
+
+        var spawner = gameObject.AddComponent<PlayerSpawner>();
 
         var scene = SceneRef.FromIndex(1);
         var sceneInfo = new NetworkSceneInfo();
@@ -140,7 +144,7 @@ public class GameLauncher : MonoBehaviour, INetworkRunnerCallbacks
         var StartGameArgs = new StartGameArgs()
         {
             GameMode = mode,
-            SessionName = "ZombieShooter",
+            SessionName = "Destroyer",
             Scene = sceneInfo,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         };

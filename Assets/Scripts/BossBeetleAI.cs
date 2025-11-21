@@ -28,7 +28,7 @@ public class BossBeetleAI : MonoBehaviour
     public float idleTime = 2f;
 
     [Header("Internal States")]
-    private int patrolIndex = 0;
+    public int patrolIndex = 0;
     private bool isPatrolling = true;
     private bool isIdle = false;
     private bool isRaging = false;
