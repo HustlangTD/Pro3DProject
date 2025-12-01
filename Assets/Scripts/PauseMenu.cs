@@ -11,7 +11,7 @@ public class PauseMenu : MonoBehaviour
     public Button playAgainButton;         // Nút Play Again
     public Button mainMenuButton;          // Nút Main Menu
 
-    private bool isPaused = false;
+    public bool isPaused = false;
 
     private void Start()
     {
